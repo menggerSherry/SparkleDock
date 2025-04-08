@@ -1,7 +1,5 @@
 
 .vscode/**
-*.out
-*.pdb
 *.repr
 bin/
 lib/
