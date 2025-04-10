@@ -7,7 +7,7 @@ fi
 
 set -ex
 declare -a stringArray
-stringArray=("2VXT" "2X9A" "4GAM" "4JCV" "4LW4")
+stringArray=("4GAM" "4JCV" "4LW4")
 HOME=$dock_home/bm/
 STEPS=100
 # dock_home=/share/home/mengxiangyu/sparkledock
