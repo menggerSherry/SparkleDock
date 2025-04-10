@@ -5,7 +5,7 @@
 #SBATCH -c 32
 #SBATCH --output=./scale2_%j.out
 
-export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/sparkledock/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/SparkleDock/lib:$LD_LIBRARY_PATH
 export NUM_THREADS=32
 export USE_CUDA=1
 STEPS=100

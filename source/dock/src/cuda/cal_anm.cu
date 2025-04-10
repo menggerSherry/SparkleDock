@@ -27,7 +27,10 @@
 
 void eigh_gpu(double * eigenvalues, double * eigenvectors, double * matrix, int * eigvals, int n, int rank, int size){
 
-    int gpu_device = rank % 4;
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    
+    int gpu_device = rank % deviceCount;
     CHECK_CUDA(cudaSetDevice(gpu_device));
 
     cusolverDnHandle_t cusolver_handle;

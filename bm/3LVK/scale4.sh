@@ -17,11 +17,11 @@
 
 # srun bash -c "while true; do echo \$(hostname): \$(nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.free --format=csv,noheader,nounits) >> gpu_usage_\$(hostname).log; sleep 5; done" &
 
-export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/sparkledock/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/SparkleDock/lib:$LD_LIBRARY_PATH
 export NUM_THREADS=32
 export USE_CUDA=1
 STEPS=100
-dock_home=/home/bingxing2/home/scx8jwu/mxy/sparkledock
+dock_home=/home/bingxing2/home/scx8jwu/mxy/SparkleDock
 rm -rf swarm_*
 rm -rf clustered
 

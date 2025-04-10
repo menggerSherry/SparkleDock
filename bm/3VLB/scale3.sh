@@ -17,11 +17,11 @@
 # export OMPI_MCA_orte_base_help_aggregate=0
 # export OMPI_MCA_btl_openib_warn_no_cpcs_for_port=0
 
-export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/sparkledock/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/bingxing2/home/scx8jwu/mxy/SparkleDock/lib:$LD_LIBRARY_PATH
 export NUM_THREADS=32
 export USE_CUDA=1
 STEPS=100
-dock_home=/home/bingxing2/home/scx8jwu/mxy/sparkledock
+dock_home=/home/bingxing2/home/scx8jwu/mxy/SparkleDock
 rm -rf swarm_*
 rm -rf clustered
 

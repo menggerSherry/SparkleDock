@@ -6,11 +6,11 @@
 #DSUB -oo scale3_%J.out					
 #DSUB -eo scale3_%J.err			
 
-export LD_LIBRARY_PATH=/home/l6eub2ic/whcs-share31/mengxiangyu/sparkledock/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock/lib:$LD_LIBRARY_PATH
 export NUM_THREADS=32
 export USE_CUDA=1
 STEPS=100
-dock_home=/home/l6eub2ic/whcs-share31/mengxiangyu/sparkledock
+dock_home=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock
 rm -rf swarm_*
 rm -rf clustered
 

@@ -2482,10 +2482,11 @@ void cal_gso_tasks_gpu(SwarmCenters & centers,Complex & receptor, Complex &ligna
     int object_size_rec, int object_size_lig, int rank, int size)
 {   
     // int chunks = get_chunks();
-    
-    int gpu_device = rank % 4;
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    int gpu_device = rank % deviceCount;
     cudaSetDevice(gpu_device);
-    // std::cout<<rank<<":"<<gpu_device<<":"<<size<<std::endl;
+    // std::cout<<rank<<":"<<gpu_device<<":"<<deviceCount<<std::endl;
     static int num_threads = get_env_num_threads();
     size_t freeMem, totalMem;
     cudaError_t err = cudaMemGetInfo(&freeMem, &totalMem);
