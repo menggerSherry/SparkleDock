@@ -114,9 +114,19 @@ int main(int argc, char ** argv){
     );
     MPI_Barrier(MPI_COMM_WORLD);
     double end_time = MPI_Wtime();
-    if(rank==0){
-        std::cout<<"simulation execution:"<<end_time-start_time<<std::endl;
+#if defined(LOAD_BALANCE)
+    double global_time = 0;
+    double local_time = end_time-start_time;
+    MPI_Allreduce(&local_time, &global_time, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    
+    std::cout<<local_time-global_time/size<<std::endl;
+#else
+    if (rank == 0){
+        std::cout<<end_time-start_time<<std::endl;
     }
+#endif
+    
+    
     
     
     free_complex(receptor);
