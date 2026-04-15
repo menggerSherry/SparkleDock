@@ -1,0 +1,2 @@
+#pragma once
+#define PROJECT_PATH "@DC_PATH@"
