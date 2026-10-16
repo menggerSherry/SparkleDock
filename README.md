@@ -2,7 +2,7 @@
 
 # Overview
 
-SparkleDock is a GPU-native Glowworm Swarm Optimization (GSO) docking system, enabling large-scale flexible macromolecule docking. It supports:
+SparkleDock is a scalable Glowworm Swarm Optimization (GSO) docking system on GPU supercomputers, enabling large-scale flexible macromolecule docking. It supports:
 
 *  A fine-grained, agent-level parallelization to match the SM in GPU.
 *  TensorCore accelerated CUDA kernel design to enhance the computing efficiency.
