@@ -133,3 +133,17 @@ rm -rf lightdock* init/ swarm_*
 mpirun -np $GPUS $dock_home/bin/lightdock -f setup.json -s $STEPS -l 1 
 
 ```
+
+# Citation
+
+```
+@misc{meng2026scalablehighfidelitymacromoleculardocking,
+      title={Scalable High-Fidelity Macromolecular Docking for GPU-Accelerated Supercomputers}, 
+      author={Xiangyu Meng and Peng Chen and Mingzhen Li and Jianmin Wang and Sen Wang and Guangming Tan and Weile Jia and Mohamed Wahib and Tao Luo and Xun Wang},
+      year={2026},
+      eprint={2608.07078},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
+      url={https://arxiv.org/abs/2608.07078}, 
+}
+```
