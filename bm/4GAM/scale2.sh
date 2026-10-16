@@ -6,15 +6,20 @@
 #DSUB -oo scale2_%J.out					
 #DSUB -eo scale2_%J.err			
 
-export LD_LIBRARY_PATH=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock/lib:$LD_LIBRARY_PATH
+
+if [ -z $dock_home ]
+then
+    echo "not found envoriment variable : dock_home"
+fi
+export LD_LIBRARY_PATH=$dock_home/lib:$LD_LIBRARY_PATH
 export NUM_THREADS=32
 export USE_CUDA=1
 STEPS=100
-dock_home=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock
+# dock_home=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock
 rm -rf swarm_*
 rm -rf clustered
 
-mpirun -np 2 $dock_home/bin/lightdock -f setup.json -s $STEPS -l 1 
+mpirun -np 2 $dock_home/bin/sparkledock -f setup.json -s $STEPS -l 1 
 
 rm -rf swarm_*
 rm -rf clustered

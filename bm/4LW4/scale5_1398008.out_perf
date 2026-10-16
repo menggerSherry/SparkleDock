@@ -1,0 +1,29 @@
+============ Job 1398008 Performance Details ============
+JobID: 1398008
+User: scx7753
+Nodes、GPU: paraai-n32-h-01-agent-150: 1,2,3; paraai-n32-h-01-agent-147: 0,1,2,3
+Time Range: 2026-08-07 13:40:28 - 2026-08-07 13:41:15
+Running time: 0d0H0M47S
+GPU Util: 0 %
+GMem Util: 0.08 %
+GMemBW Util: 0 %
+Tensor Core Util: 0 %
+Tensor IMMA Util: N/A
+Tensor HMMA Util: N/A
+Tensor DFMA Util: N/A
+FP64 Util: 0 %
+FP32 Util: 0 %
+FP16 Util: 0 %
+GPCIE RX: 95.56 KB/s
+GPCIE TX: 184.03 KB/s
+GNVLINK: N/A
+GPU Power: 129.92 W
+GPU Temperature: 32.43 °C
+
+Additional Performance Data:
+--- flops performance(avg to single card) ---
+|- fp64: 0 TFlops
+|- fp32: 0 TFlops
+|- fp16: 0 TFlops
+|- tensor: 0 TFlops
+=========================================================

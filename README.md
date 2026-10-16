@@ -1,10 +1,10 @@
-# SparkleDock: A GPU-Native Flexible Macromolecule Docking System
+# SparkleDock: Scalable High-Fidelity Macromolecular Docking for GPU-Accelerated Supercomputers
 
 # Overview
 
 SparkleDock is a GPU-native Glowworm Swarm Optimization (GSO) docking system, enabling large-scale flexible macromolecule docking. It supports:
 
-*  A fine-grained, glowworm-level parallelization to match the SM in GPU.
+*  A fine-grained, agent-level parallelization to match the SM in GPU.
 *  TensorCore accelerated CUDA kernel design to enhance the computing efficiency.
 *  Efficient MPI design to adaptively scale across multi-GPU systems.
 
@@ -16,10 +16,10 @@ SparkleDock can accelerate the macromolecule docking by over two orders of magni
 
 ### software requirements
 ```
-openmpi/4.1.5
-cuda/11.8.0 
-gcc/11.3.0
-cmake/3.16.5
+openmpi/4.1.5 and over
+cuda/11.8.0 and over 
+gcc/11.3.0 and over
+cmake/3.16.5 and over
 ```
 ### Hardware requirements
 

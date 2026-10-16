@@ -1,0 +1,35 @@
+============ Job 1378125 Performance Details ============
+JobID: 1378125
+User: scx7753
+Nodes、GPU: paraai-n32-h-01-agent-91: 0,1,2,3; paraai-n32-h-01-agent-92: 0,1,2,3; paraai-n32-h-01-agent-93: 0,1,2,3; paraai-n32-h-01-agent-97: 0,1,2,3; paraai-n32-h-01-agent-95: 0,1,2,3; paraai-n32-h-01-agent-94: 0,1,2,3; paraai-n32-h-01-agent-188: 0,1,2,3; paraai-n32-h-01-agent-151: 0,1,2,3; paraai-n32-h-01-agent-153: 0,1,2,3; paraai-n32-h-01-agent-154: 0,1,2,3; paraai-n32-h-01-agent-192: 0,1,2,3; paraai-n32-h-01-agent-199: 0,1,2,3; paraai-n32-h-01-agent-200: 0,1,2,3; paraai-n32-h-01-agent-227: 0,1,2,3; paraai-n32-h-01-agent-23: 0,1,2,3; paraai-n32-h-01-agent-99: 0,1,2,3; paraai-n32-h-01-agent-42: 0,2,3; paraai-n32-h-01-agent-98: 0,1,2,3; paraai-n32-h-01-agent-12: 0,1,2,3; paraai-n32-h-01-agent-13: 0,1,2,3; paraai-n32-h-01-agent-201: 0,1,2,3; paraai-n32-h-01-agent-37: 0,1,2,3; paraai-n32-h-01-agent-87: 0,1,2,3; paraai-n32-h-01-agent-27: 0,1,2,3; paraai-n32-h-01-agent-29: 0,1,2,3; paraai-n32-h-01-agent-60: 0,1,2,3; paraai-n32-h-01-agent-187: 0,1,2,3
+Time Range: 2026-07-31 03:08:48 - 2026-07-31 03:12:24
+Running time: 0d0H3M36S
+GPU Util: 8.47 %
+GMem Util: 0.43 %
+GMemBW Util: 0.37 %
+Tensor Core Util: 0.93 %
+Tensor IMMA Util: N/A
+Tensor HMMA Util: N/A
+Tensor DFMA Util: N/A
+FP64 Util: 4.25 %
+FP32 Util: 0 %
+FP16 Util: 0 %
+GPCIE RX: 10.05 MB/s
+GPCIE TX: 7.08 MB/s
+GNVLINK: N/A
+GPU Power: 213.54 W
+GPU Temperature: 32.93 °C
+
+Additional Performance Data:
+--- flops performance(avg to single card) ---
+|- fp64: 0 TFlops
+|- fp32: 0 TFlops
+|- fp16: 0 TFlops
+|- tensor: 1 TFlops
+> |- GMEMBW/F: 4,083 B/MF
+> |- NVLINK/F: No Data
+> |- IB_TX/F: No Data
+> |- IB_RX/F: No Data
+> |- PCIE_TX/F: 1 B/MF
+> |- PCIE_RX/F: 2 B/MF
+=========================================================

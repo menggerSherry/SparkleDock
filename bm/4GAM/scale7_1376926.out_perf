@@ -1,0 +1,35 @@
+============ Job 1376926 Performance Details ============
+JobID: 1376926
+User: scx7753
+Nodes、GPU: paraai-n32-h-01-agent-91: 0,1,2,3; paraai-n32-h-01-agent-94: 0,1,2,3; paraai-n32-h-01-agent-95: 0,1,2,3; paraai-n32-h-01-agent-97: 0,1,2,3; paraai-n32-h-01-agent-92: 0,1,2,3; paraai-n32-h-01-agent-93: 0,1,2,3; paraai-n32-h-01-agent-153: 0,1,2,3; paraai-n32-h-01-agent-154: 0,1,2,3; paraai-n32-h-01-agent-99: 0,1,2,3; paraai-n32-h-01-agent-49: 0,1,2,3; paraai-n32-h-01-agent-98: 0,1,2,3; paraai-n32-h-01-agent-47: 0,1,2,3; paraai-n32-h-01-agent-151: 0,1,2,3
+Time Range: 2026-07-30 16:43:38 - 2026-07-30 16:46:37
+Running time: 0d0H2M59S
+GPU Util: 4.49 %
+GMem Util: 0.37 %
+GMemBW Util: 0.07 %
+Tensor Core Util: 0.38 %
+Tensor IMMA Util: N/A
+Tensor HMMA Util: N/A
+Tensor DFMA Util: N/A
+FP64 Util: 1.59 %
+FP32 Util: 0 %
+FP16 Util: 0 %
+GPCIE RX: 6.76 MB/s
+GPCIE TX: 9.19 MB/s
+GNVLINK: N/A
+GPU Power: 179.41 W
+GPU Temperature: 32.41 °C
+
+Additional Performance Data:
+--- flops performance(avg to single card) ---
+|- fp64: 0 TFlops
+|- fp32: 0 TFlops
+|- fp16: 0 TFlops
+|- tensor: 1 TFlops
+> |- GMEMBW/F: 1,185 B/MF
+> |- NVLINK/F: No Data
+> |- IB_TX/F: No Data
+> |- IB_RX/F: No Data
+> |- PCIE_TX/F: 2 B/MF
+> |- PCIE_RX/F: 2 B/MF
+=========================================================

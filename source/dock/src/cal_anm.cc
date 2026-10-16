@@ -617,14 +617,7 @@ void calculate_surface_point(
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* split swarm chunks according to the proc num */
-    int base   = center.swarms / size;          // 每个进程的基础分配数量
-    int offset = center.swarms % size;          // 前 offset 个进程多分配1个
-    int chunk  = (rank < offset) ? (base + 1) : base;
-    center.swarm_chunk = chunk;
-    center.swarm_start = (rank < offset) ? (rank * (base + 1))
-                                        : (offset * (base + 1) + (rank - offset) * base);
-    /* split swarm chunks according to the proc num */
+    // MPI chunks are assigned after the per-swarm performance model is built.
     double * surface_centroids = new double[swarms*3];
     int * group = new int[coord_size];
     
@@ -896,15 +889,15 @@ void calculate_start_pos(
     }
 
     // performance
-    double prepare_rec = (1.0 * swarms * glowworms * receptor.num_atoms *(7+9*10))/1e9;
-    double prepare_lig = 1.0 * swarms * glowworms * ligand.num_atoms * (9*10+59)/1e9;
+    double prepare_rec = (1.0 * center.swarms * glowworms * receptor.num_atoms *(7+9*10))/1e9;
+    double prepare_lig = 1.0 * center.swarms * glowworms * ligand.num_atoms * (9*10+59)/1e9;
     double log2_val = std::log(receptor.num_atoms * ligand.num_atoms)/std::log(2);
     int ceil_val = static_cast<int>(std::ceil(log2_val));
-    double calc_difire = (1.0 * swarms * glowworms * receptor.num_atoms * ligand.num_atoms * 4 * 2)/1e9;
-    double calc_reduce = swarms * glowworms * ceil_val / 1e9;
-    double calc_neighbor  = (1.0 * swarms * glowworms * (glowworms + 4 * 5))/1e9;
+    double calc_difire = (1.0 * center.swarms * glowworms * receptor.num_atoms * ligand.num_atoms * 4 * 2)/1e9;
+    double calc_reduce = center.swarms * glowworms * ceil_val / 1e9;
+    double calc_neighbor  = (1.0 * center.swarms * glowworms * (glowworms + 4 * 5))/1e9;
 
-    double movement = (1.0 * swarms * glowworms * (69 + 5 * (10 + 10)))/1e9;
+    double movement = (1.0 * center.swarms * glowworms * (69 + 5 * (10 + 10)))/1e9;
 
     double flops_prepare_rec = 582.110;
     double flops_calc_difire = 1215.533;
@@ -912,7 +905,6 @@ void calculate_start_pos(
     double flops_reduce = 71.44;
     double flops_movement = 18.697;
     double flops_nnei = 20.070;
-    double bandwidth = 805.284;
     size_t total_input = sizeof(unsigned int) * 50
         + sizeof(double) * receptor.num_atoms * 3
         + sizeof(double) * ligand.num_atoms * 3
@@ -924,40 +916,61 @@ void calculate_start_pos(
         + sizeof(double) * 168 * 168 * 20
         + sizeof(int) * receptor.num_atoms
         + sizeof(int) * ligand.num_atoms
-        + sizeof(double) * swarms * center.pos_len
-        + sizeof(double) * swarms * glowworms * receptor.num_atoms * 4
-        + sizeof(double) * swarms * glowworms * ligand.num_atoms * 4
-        + sizeof(int) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(double) * swarms * glowworms
-        + sizeof(int) * swarms * glowworms * 4
-        + sizeof(double) * 100 * swarms * glowworms;
+        + sizeof(double) * center.swarms * center.pos_len
+        + sizeof(double) * center.swarms * glowworms * receptor.num_atoms * 4
+        + sizeof(double) * center.swarms * glowworms * ligand.num_atoms * 4
+        + sizeof(int) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(double) * center.swarms * glowworms
+        + sizeof(int) * center.swarms * glowworms * 4
+        + sizeof(double) * 100 * center.swarms * glowworms;
 
-    size_t total_output = sizeof(double) * swarms * center.pos_len
-        + sizeof(double) * swarms * glowworms * 3
-        + sizeof(int) * swarms * glowworms;
+    size_t total_output = sizeof(double) * center.swarms * center.pos_len
+        + sizeof(double) * center.swarms * glowworms * 3
+        + sizeof(int) * center.swarms * glowworms;
 
     double total_input_GB = static_cast<double>(total_input) / (1024.0 * 1024.0 * 1024.0);
     double total_output_GB = static_cast<double>(total_output) / (1024.0 * 1024.0 * 1024.0);
 
-    int n_p = 16;
-
-    double t_difire = calc_difire / flops_calc_difire / n_p;
-    double t_rec = prepare_rec / flops_prepare_rec / n_p;
-    double t_lig = prepare_lig / flops_prepare_lig / n_p;
-    double t_nnei = calc_neighbor / flops_nnei / n_p;
-    double t_move = movement / flops_movement / n_p;
-    double t_h2d = total_input_GB / 28 /n_p;
-    double t_d2h = total_output_GB / 28/n_p;
-    double t_reduce = calc_reduce / flops_reduce / n_p;
+    double t_difire = calc_difire / flops_calc_difire;
+    double t_rec = prepare_rec / flops_prepare_rec;
+    double t_lig = prepare_lig / flops_prepare_lig;
+    double t_nnei = calc_neighbor / flops_nnei;
+    double t_move = movement / flops_movement;
+    double t_h2d = total_input_GB / 28;
+    double t_d2h = total_output_GB / 28;
+    double t_reduce = calc_reduce / flops_reduce;
     
 
     double total  = (t_difire+t_rec+t_lig+t_nnei+t_move + t_reduce) * 100 + t_h2d + t_d2h;
+
+    // Assign each modeled swarm to the least-loaded MPI rank.
+    // With the random movement mask ignored, every swarm has the same cost, so
+    // the resulting queue sizes can keep the existing contiguous chunk layout.
+    double swarm_time = total / center.swarms;
+    std::vector<double> rank_times(size, 0.0);
+    std::vector<int> rank_swarms(size, 0);
+    for (int i = 0; i < center.swarms; i++) {
+        int target_rank = 0;
+        for (int p = 1; p < size; p++) {
+            if (rank_times[p] < rank_times[target_rank]) {
+                target_rank = p;
+            }
+        }
+        rank_times[target_rank] += swarm_time;
+        rank_swarms[target_rank]++;
+    }
+
+    center.swarm_start = 0;
+    for (int p = 0; p < rank; p++) {
+        center.swarm_start += rank_swarms[p];
+    }
+    center.swarm_chunk = rank_swarms[rank];
 
     // std::cout << "t_difire = " << t_difire * 100  << " s" << std::endl;
     // std::cout << "t_rec    = " << t_rec * 100  << " s" << std::endl;
@@ -1127,6 +1140,5 @@ void cal_dist(double * distances_matrix_rec, double *atom_coordinates, int num_a
         }
     }
 }
-
 
 

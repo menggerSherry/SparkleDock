@@ -2,9 +2,9 @@
 #SBATCH -N 64
 #SBATCH --gres=gpu:4
 #SBATCH --qos=gpugpu
-#SBATCH -c 256
+#SBATCH -c 32
 #SBATCH --ntasks-per-node=4
-#SBATCH -n 128
+#SBATCH -n 256
 #SBATCH --output=./scale9_%j.out	
 
 JOB_ID=${BATCH_JOB_ID}

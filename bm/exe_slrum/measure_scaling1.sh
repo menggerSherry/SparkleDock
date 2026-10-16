@@ -30,6 +30,6 @@ cd ${HOME}${COMPLEX}
 rm -rf lightdock* init/ swarm_*
 
 
-dsub -s scale1.sh
+sbatch scale_slurm1.sh
 
 done

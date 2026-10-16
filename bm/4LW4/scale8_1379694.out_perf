@@ -1,0 +1,35 @@
+============ Job 1379694 Performance Details ============
+JobID: 1379694
+User: scx7753
+Nodes、GPU: paraai-n32-h-01-agent-92: 0,1,2,3; paraai-n32-h-01-agent-95: 0,1,2,3; paraai-n32-h-01-agent-97: 0,1,2,3; paraai-n32-h-01-agent-93: 0,1,2,3; paraai-n32-h-01-agent-192: 0,1,2,3; paraai-n32-h-01-agent-147: 0,1,2,3; paraai-n32-h-01-agent-149: 0,1,2; paraai-n32-h-01-agent-150: 0,1,2,3; paraai-n32-h-01-agent-200: 0,1,2,3; paraai-n32-h-01-agent-99: 0,2,3; paraai-n32-h-01-agent-151: 0,1,2,3; paraai-n32-h-01-agent-87: 0,1,2,3; paraai-n32-h-01-agent-199: 0,1,2,3; paraai-n32-h-01-agent-185: 0,1,2,3; paraai-n32-h-01-agent-201: 0,1,2,3
+Time Range: 2026-07-31 14:30:25 - 2026-07-31 14:30:57
+Running time: 0d0H0M32S
+GPU Util: 10.19 %
+GMem Util: 0.17 %
+GMemBW Util: 0.19 %
+Tensor Core Util: 0.86 %
+Tensor IMMA Util: N/A
+Tensor HMMA Util: N/A
+Tensor DFMA Util: N/A
+FP64 Util: 3.90 %
+FP32 Util: 0 %
+FP16 Util: 0 %
+GPCIE RX: 19.19 MB/s
+GPCIE TX: 20.80 MB/s
+GNVLINK: N/A
+GPU Power: 237.40 W
+GPU Temperature: 33.56 °C
+
+Additional Performance Data:
+--- flops performance(avg to single card) ---
+|- fp64: 0 TFlops
+|- fp32: 0 TFlops
+|- fp16: 0 TFlops
+|- tensor: 1 TFlops
+> |- GMEMBW/F: 3,197 B/MF
+> |- NVLINK/F: No Data
+> |- IB_TX/F: No Data
+> |- IB_RX/F: No Data
+> |- PCIE_TX/F: 5 B/MF
+> |- PCIE_RX/F: 5 B/MF
+=========================================================

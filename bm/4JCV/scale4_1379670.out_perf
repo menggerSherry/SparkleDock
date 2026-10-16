@@ -1,0 +1,35 @@
+============ Job 1379670 Performance Details ============
+JobID: 1379670
+User: scx7753
+Nodes、GPU: paraai-n32-h-01-agent-150: 0,1,2,3; paraai-n32-h-01-agent-149: 0,1,2,3
+Time Range: 2026-07-31 11:23:26 - 2026-07-31 11:25:21
+Running time: 0d0H1M55S
+GPU Util: 46.88 %
+GMem Util: 7.36 %
+GMemBW Util: 0.66 %
+Tensor Core Util: 5.72 %
+Tensor IMMA Util: N/A
+Tensor HMMA Util: N/A
+Tensor DFMA Util: N/A
+FP64 Util: 26.35 %
+FP32 Util: 0 %
+FP16 Util: 0 %
+GPCIE RX: 3.27 MB/s
+GPCIE TX: 3.66 MB/s
+GNVLINK: N/A
+GPU Power: 520.82 W
+GPU Temperature: 40.53 °C
+
+Additional Performance Data:
+--- flops performance(avg to single card) ---
+|- fp64: 2 TFlops
+|- fp32: 0 TFlops
+|- fp16: 0 TFlops
+|- tensor: 16 TFlops
+> |- GMEMBW/F: 640 B/MF
+> |- NVLINK/F: No Data
+> |- IB_TX/F: No Data
+> |- IB_RX/F: No Data
+> |- PCIE_TX/F: 0 B/MF
+> |- PCIE_RX/F: 0 B/MF
+=========================================================

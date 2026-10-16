@@ -5,7 +5,7 @@
 #SBATCH -c 32
 #SBATCH --ntasks-per-node=4
 #SBATCH -n 256
-#SBATCH --output=./scale9_%j.out
+#SBATCH --output=./scale9_%j.out	
 
 JOB_ID=${BATCH_JOB_ID}
 cat $CCS_ALLOC_FILE | grep ^whshare | awk '{print $1,"slots="$2}' > ${JOB_ID}.nodefile

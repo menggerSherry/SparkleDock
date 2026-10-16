@@ -302,10 +302,15 @@ __global__ void prepare_receptor_pose(
     // double * s_pos = s_mem;
     // double * s_current_pose = s_mem;
 
-    s_current_pose[thread_idx*3] = d_receptor_atom_coordinates[n*3];
-    s_current_pose[thread_idx*3+1] = d_receptor_atom_coordinates[n*3+1];
-    s_current_pose[thread_idx*3+2] = d_receptor_atom_coordinates[n*3+2];
-    s_mask[thread_idx] = d_receptor_mask[n];
+    if (n < receptor_atoms) {
+        s_current_pose[thread_idx*3] =
+            d_receptor_atom_coordinates[n*3];
+        s_current_pose[thread_idx*3+1] =
+            d_receptor_atom_coordinates[n*3+1];
+        s_current_pose[thread_idx*3+2] =
+            d_receptor_atom_coordinates[n*3+2];
+        s_mask[thread_idx] = d_receptor_mask[n];
+    }
     __syncthreads();
 
     double center_pos [27];
@@ -316,9 +321,9 @@ __global__ void prepare_receptor_pose(
     int steped = d_step_base[block_idz*num_glowworms + block_idy];
 
     if (n<receptor_atoms && (moved || step == 0)){
-        for(int jj = 0; jj< 3;jj++){
-            current_receptor_pose[n*3+jj] = d_receptor_atom_coordinates[n*3+jj];
-        }
+        // for(int jj = 0; jj< 3;jj++){
+        //     current_receptor_pose[n*3+jj] = d_receptor_atom_coordinates[n*3+jj];
+        // }
         for(int j = 0; j<DEFAULT_NMODES_REC; j++){
             double * rep_modes = &d_receptor_modes[j*receptor_atoms*3+n*3];
             double rec_instant = center_pos[7+j];
@@ -368,12 +373,24 @@ __global__ void prepare_lignad_pose(
     int steped = d_step_base[block_idz*num_glowworms + block_idy];
     size_t n = block_size * block_idx + thread_idx;
 
-    s_current_pose[thread_idx*3] = d_ligand_atom_coordinates[n*3];
-    s_current_pose[thread_idx*3+1] = d_ligand_atom_coordinates[n*3+1];
-    s_current_pose[thread_idx*3+2] = d_ligand_atom_coordinates[n*3+2];
+    const bool valid = n < ligand_atoms;
 
-    s_mask[thread_idx] = d_ligand_mask[n];
+    if (valid) {
+        s_current_pose[thread_idx * 3] =
+            d_ligand_atom_coordinates[n * 3];
+        s_current_pose[thread_idx * 3 + 1] =
+            d_ligand_atom_coordinates[n * 3 + 1];
+        s_current_pose[thread_idx * 3 + 2] =
+            d_ligand_atom_coordinates[n * 3 + 2];
+        s_mask[thread_idx] = d_ligand_mask[n];
+    } else {
+        s_current_pose[thread_idx * 3] = 0.0;
+        s_current_pose[thread_idx * 3 + 1] = 0.0;
+        s_current_pose[thread_idx * 3 + 2] = 0.0;
+        s_mask[thread_idx] = 0;
+    }
     __syncthreads();
+
 
     double center_pos [27];
     for(int i = 0; i<27; i++){
@@ -500,126 +517,6 @@ __global__ void prepare_lignad_pose(
 
 }
 
-
-
-__global__ void calculate_dfire_base(
-    double * d_receptor_pose, double * d_ligand_pose,
-    double * d_scoring_base, double * d_luciferin_base, double * d_rho_base, double * d_gamma_base,
-    double * energy_tmp,
-    int * d_moved_base, int * d_step_base,
-    double * fastdfire, int * dfire_objects_rec, int * dfire_objects_lig, unsigned int * d_dist_to_bins,
-    size_t swarms, size_t num_glowworms, size_t anm_lig, size_t anm_rec,
-    size_t receptor_atoms, size_t ligand_atoms, size_t rec_len, size_t lig_len
-){
-    const size_t block_idx = blockIdx.x;
-    const size_t block_idy = blockIdx.y;
-    const size_t block_idz = blockIdx.z;
-    const size_t thread_idx = threadIdx.x;
-    const size_t block_size = blockDim.x;
-    // if(block_idz==3 && block_idy==3 && block_idx==0 && thread_idx==0){
-    //         printf("test \n");
-    // }
-    size_t pos_len = 7+anm_rec+anm_lig;
-
-    int moved = d_moved_base[block_idz*num_glowworms + block_idy];
-    int steped = d_step_base[block_idz*num_glowworms + block_idy];
-    size_t n = block_size * block_idx + thread_idx;
-    if((moved || steped == 0) && n < receptor_atoms){
-
-    // __shared__ int s_mem[8192];
-        __shared__ double s_mem[1024][3+1+1];
-
-        // __shared__ double s_mem[512];
-        // double * s_pos = s_mem;
-
-        // double * s_current_receptor_pose = (double *)(s_mem);
-        int ligand_idx_base = 256;
-        int s_lig_idx = ligand_idx_base + thread_idx;
-
-        int * s_dfire_objects_rec = (int * )(&s_mem[513][0]);
-
-
-
-        // share
-        double * current_ligand_pose = &d_ligand_pose[block_idz * num_glowworms * lig_len*4 + block_idy * lig_len*4];
-        // double * current_ligand_reference_pose = &d_ligand_reference_pose[block_idz * num_glowworms * 3 + block_idy * 3];
-        double * current_receptor_pose = &d_receptor_pose[block_idz * num_glowworms * rec_len*4 + block_idy * rec_len*4];
-
-
-
-        double rho =  d_rho_base[block_idz*num_glowworms+block_idy];
-        double luciferins = d_luciferin_base[block_idz*num_glowworms+block_idy];
-        double gamma = d_gamma_base[block_idz*num_glowworms+block_idy];
-        double energy = d_scoring_base[block_idz*num_glowworms+block_idy];
-
-
-        // s_mem[thread_idx][0] = (n<receptor_atoms) ? current_receptor_pose[n*4+0] : 0;
-        // s_mem[thread_idx][1] = (n<receptor_atoms) ? current_receptor_pose[n*4+1] : 0;
-        // s_mem[thread_idx][2] = (n<receptor_atoms) ? current_receptor_pose[n*4+2] : 0;
-        // s_mem[thread_idx][3] = (n<receptor_atoms) ? current_receptor_pose[n*4+3] : 0;
-        // s_current_receptor_pose[thread_idx * 3] = current_receptor_pose[n*3+0];
-        // s_current_receptor_pose[thread_idx * 3 + 1] = current_receptor_pose[n*3+1];
-        // s_current_receptor_pose[thread_idx * 3 + 2] = current_receptor_pose[n*3+2];
-        // s_dfire_objects_rec[thread_idx] = (n<receptor_atoms) ? dfire_objects_rec[n] : 0;
-        // s_ener[thread_idx] = 0;
-        // __syncthreads();
-
-        int atoma = dfire_objects_rec[n] *168*20;
-
-        energy=0.0;
-
-
-        for (int j = 0; j < ligand_atoms; j++) {
-            double dist0 = current_receptor_pose[n*4+0] - current_ligand_pose[j*4+0];
-            double dist1 = current_receptor_pose[n*4+1] - current_ligand_pose[j*4+1];
-            double dist2 = current_receptor_pose[n*4+2] - current_ligand_pose[j*4+2];
-
-            double dist = dist0 * dist0 + dist1 * dist1 + dist2 * dist2;
-            // if(n >= receptor_atoms) {dist=0.0;}
-
-            if (dist <= 225 && dist > 0) {
-
-                int d = (sqrt(dist)*2.0 - 1.0);
-
-                int atomb = dfire_objects_lig[j];
-                int dfire_bin = d_dist_to_bins[d] - 1;
-                unsigned int array_ = atoma + atomb*20 + dfire_bin;
-                double value = fastdfire[array_];
-                energy += value;
-
-
-            }
-        }
-
-        // if(block_idz == 0 && block_idy==0 && block_idx == 0 && thread_idx == 0){
-        //     printf("test: %f", energy);
-        // }
-
-
-
-        // reduce
-        // 当前receptor的enrngy
-
-        double * s_ener = (double*)(&s_mem[0][0]);
-        s_ener[thread_idx] = (n<receptor_atoms) ? energy : 0;
-        __syncthreads();
-
-        for(int offset = block_size >> 1; offset >= 32; offset >>=1){
-            if(thread_idx < offset){
-                s_ener[thread_idx] += s_ener[thread_idx+offset];
-            }
-            __syncthreads();
-        }
-        double y = s_ener[thread_idx];
-        for(int offset = 16; offset > 0; offset>>=1){
-            y+=__shfl_down_sync(FULL_MASK,y,offset);
-        }
-
-        if(thread_idx==0){
-            energy_tmp[block_idz*num_glowworms*gridDim.x + block_idy*gridDim.x + block_idx] = y;
-        }
-    }
-}
 
 
 __global__ void cal_score(
@@ -1401,93 +1298,6 @@ __global__ void sum_ener(
     }
 }
 
-
-__global__ void calculate_dfire2(
-    double * energy_tmp, double * sum_ener,
-    double * d_receptor_pose, double * d_ligand_pose,
-    double * d_scoring_base, double * d_luciferin_base, double * d_rho_base, double * d_gamma_base,
-    int * d_moved_base, int * d_step_base,
-    double * fastdfire, int * dfire_objects_rec, int * dfire_objects_lig, unsigned int * d_dist_to_bins,
-    int swarms, int num_glowworms, int anm_lig, int anm_rec,
-    int receptor_atoms, int ligand_atoms, int rec_len, int lig_len
-){
-    const int block_idx = blockIdx.x;
-    const int block_idy = blockIdx.y;
-    const int block_idz = blockIdx.z;
-    const int thread_idx = threadIdx.x;
-    const int block_size = blockDim.x;
-    // if(block_idz==3 && block_idy==3 && block_idx==0 && thread_idx==0){
-    //         printf("test \n");
-    // }
-    int pos_len = 7+anm_rec+anm_lig;
-
-    int moved = d_moved_base[block_idz*num_glowworms + block_idy];
-    int steped = d_step_base[block_idz*num_glowworms + block_idy];
-    int n = block_size * block_idx + thread_idx;
-    if((moved || steped == 0) && n < receptor_atoms){
-
-    // __shared__ int s_mem[8192];
-        __shared__ double s_mem[1024][3+1+1];
-
-        // __shared__ double s_mem[512];
-        // double * s_pos = s_mem;
-
-        // double * s_current_receptor_pose = (double *)(s_mem);
-        int ligand_idx_base = 256;
-        int s_lig_idx = ligand_idx_base + thread_idx;
-
-        // int * s_dfire_objects_rec = (int * )(&s_mem[513][0]);
-
-
-
-        // share
-        double * current_ligand_pose = &d_ligand_pose[block_idz * num_glowworms * lig_len*4 + block_idy * lig_len*4];
-        // double * current_ligand_reference_pose = &d_ligand_reference_pose[block_idz * num_glowworms * 3 + block_idy * 3];
-        double * current_receptor_pose = &d_receptor_pose[block_idz * num_glowworms * rec_len*4 + block_idy * rec_len*4];
-        double * current_energy_tmp = &energy_tmp[block_idz * num_glowworms * rec_len * lig_len + block_idy * rec_len * lig_len];
-        double * current_ener = &sum_ener[block_idz * num_glowworms * rec_len + block_idy * rec_len];
-
-        double rho =  d_rho_base[block_idz*num_glowworms+block_idy];
-        double luciferins = d_luciferin_base[block_idz*num_glowworms+block_idy];
-        double gamma = d_gamma_base[block_idz*num_glowworms+block_idy];
-        double energy = d_scoring_base[block_idz*num_glowworms+block_idy];
-
-        int atoma = dfire_objects_rec[n] *168*20;
-        energy = 0;
-
-
-        for (int j = 0; j < ligand_atoms; j++) {
-            double dist0 = current_receptor_pose[n*4+0] - current_ligand_pose[j*4+0];
-            double dist1 = current_receptor_pose[n*4+1] - current_ligand_pose[j*4+1];
-            double dist2 = current_receptor_pose[n*4+2] - current_ligand_pose[j*4+2];
-
-            double dist = dist0 * dist0 + dist1 * dist1 + dist2 * dist2;
-            // if(n >= receptor_atoms) {dist=0.0;}
-            double tmp = 0;
-            // tmp = (sqrt(dist)*2.0 - 1.0);
-            if (dist <= 225 && dist > 0) {
-
-                int d = (sqrt(dist)*2.0 - 1.0);
-
-                // tmp = d;
-                int atomb = dfire_objects_lig[j];
-                int dfire_bin = d_dist_to_bins[d] - 1;
-                unsigned int array_ = atoma + atomb*20 + dfire_bin;
-                double value = fastdfire[array_];
-                tmp = value;
-                // tmp = value;
-                energy += value;
-
-
-            }
-            current_energy_tmp[n * lig_len + j] = tmp;
-
-        }
-        // energy_tmp = energy;
-        current_ener[n] = energy;
-    }
-}
-
 namespace config{
     using namespace cute;
     template <int kTileM_ = 32, int kTileN_ = 32, int kTileK_ = 4>
@@ -1538,247 +1348,6 @@ namespace config{
         using S2RCopyAtomB = s2r_copy_atom;
         static constexpr int block = size(MMA{});
     };
-}
-
-
-template <typename Config, int BLOCK_THREADS, int ITEM_PER_THREAD>
-__global__ void
-calculate_dfire_baseline(
-    double * d_energy_tmp,
-    double * d_receptor_pose, double * d_ligand_pose,
-    double * d_scoring_base, double * d_luciferin_base, double * d_rho_base, double * d_gamma_base,
-    int * d_moved_base, int * d_step_base,
-    double * d_fastdfire,  int * rec_object, int * lig_object, unsigned int * d_dist_to_bins,
-    size_t swarms, size_t num_glowworms,
-    size_t receptor_atoms, size_t ligand_atoms, size_t rec_tile, size_t lig_tile, size_t rec_real_len, size_t lig_real_len
-){
-    using namespace cute;
-    using namespace cub;
-    using WarpReduce = cub::WarpReduce<double>;
-    typedef BlockRadixSort<uint64_t, BLOCK_THREADS, ITEM_PER_THREAD>  BlockRadixSort;
-
-    // using X = Underscore;
-
-    using TiledMMA = typename Config::MMA;
-    using G2SCopyA = typename Config::G2SCopyA;
-    using G2SCopyB = typename Config::G2SCopyB;
-    using S2GCopyC = typename Config::S2GCopyC;
-    using S2RCopyAtomA = typename Config::S2RCopyAtomA;
-    using S2RCopyAtomB = typename Config::S2RCopyAtomB;
-
-    constexpr size_t kTileM = Config::kTileM;
-    constexpr size_t kTileN = Config::kTileN;
-    constexpr size_t kTileK = Config::kTileK;
-
-    // block 3
-    const size_t block_idx = blockIdx.x;
-    const size_t block_idy = blockIdx.y;
-    const size_t block_idz = blockIdx.z;
-    const size_t thread_idx = threadIdx.x;
-    const size_t block_size = blockDim.x;
-    const size_t warp_id = thread_idx / 32;
-    const size_t lane_id = thread_idx % 32;
-
-    __shared__ double s_mem[1280];
-    // __shared__ typename WarpReduce::TempStorage temp_storage[4];
-    // __shared__ typename BlockRadixSort::TempStorage temp_sort;
-
-    double * Ashm = s_mem;
-    double * Bshm = s_mem + 128;
-    double * Cshm = s_mem + 256;
-    double * Rshm = s_mem;
-
-    double * current_reduce = &d_energy_tmp[block_idz * num_glowworms * rec_tile * lig_tile  + block_idy * rec_tile * lig_tile  + block_idx ];
-
-
-    double * current_ligand_pose = &d_ligand_pose[block_idz * num_glowworms * ligand_atoms * 4 + block_idy * ligand_atoms * 4];
-    double * current_receptor_pose = &d_receptor_pose[block_idz * num_glowworms * receptor_atoms * 4 + block_idy * receptor_atoms * 4];
-    // double * current_D_tmp = &D_tmp[block_idz * receptor_atoms * ligand_atoms];
-    int moved = d_moved_base[block_idz * num_glowworms + block_idy];
-    int steped = d_step_base[block_idz * num_glowworms + block_idy];
-
-    double rho =  d_rho_base[block_idz * num_glowworms + block_idy];
-    double luciferins = d_luciferin_base[block_idz * num_glowworms + block_idy];
-    double gamma = d_gamma_base[block_idz * num_glowworms + block_idy];
-
-    // double * energy_ptr = &d_energy_tmp[block_idz * num_glowworms * receptor_atoms * ligand_atoms + block_idy * receptor_atoms * ligand_atoms];
-    // printf("test \n");
-    // double energy = d_scoring_base[block_idz * block_sizey * block_size + block_idy * block_size];
-    if((moved || steped == 0)){
-
-    // global memory tensor
-    Tensor A = make_tensor(make_gmem_ptr(current_receptor_pose), make_shape(receptor_atoms, 4), make_stride(4, Int<1>{}));
-    // B layout 为行优先，tensor行加1stride加K
-    Tensor B = make_tensor(make_gmem_ptr(current_ligand_pose), make_shape(ligand_atoms, 4), make_stride(4, Int<1>{}));
-
-    Tensor Rec_index = make_tensor(make_gmem_ptr(rec_object), make_shape(receptor_atoms,1), make_stride(Int<1>{}, Int<1>{}));
-    Tensor Lig_index = make_tensor(make_gmem_ptr(lig_object), make_shape(ligand_atoms,1),make_stride(Int<1>{}, Int<1>{}));
-
-    // 首先对全局内存中的A划分tile ，tile的维度是M，K， 接下来根据block确定哪一个块
-    Tensor gA = local_tile(A, make_tile(Int<kTileM>{}, Int<kTileK>{}), make_coord(block_idx / lig_tile, _));
-    Tensor gB = local_tile(B, make_tile(Int<kTileN>{}, Int<kTileK>{}), make_coord(block_idx % lig_tile, _));
-    // Tensor gC = local_tile(C, make_tile(Int<kTileM>{}, Int<kTileN>{}), make_coord(block_idx / lig_tile, block_idx % lig_tile));
-    // Tensor gC = local_tile(C, make_tile(Int<kTileM>{}, Int<kTileN>{}), make_coord(block_idy, block_idx));
-    // Tensor block_dfire = local_tile(dfire_energy, make_tile(Int<kTileM>{}, Int<kTileN*20>{}), make_coord(block_idx / lig_tile, (block_idx % lig_tile) * 20));
-    // 8次copy
-    Tensor gRec = local_tile(Rec_index, make_tile(Int<kTileM>{}, Int<1>{}), make_coord(block_idx / lig_tile, _));
-    Tensor gLig = local_tile(Lig_index, make_tile(Int<kTileN>{}, Int<1>{}), make_coord(block_idx % lig_tile, _));
-
-
-    // shared memory tensor
-    auto sA = make_tensor(make_smem_ptr(Ashm),
-                            make_shape(Int<kTileM>{}, Int<kTileK>{},Int<1>{}), make_stride(Int<kTileK>{}, Int<1>{}, Int<1>{}));
-    auto sB = make_tensor(make_smem_ptr(Bshm),
-                            make_shape(Int<kTileN>{}, Int<kTileK>{},Int<1>{}), make_stride(Int<kTileK>{}, Int<1>{}, Int<1>{}));
-    auto sC = make_tensor(make_smem_ptr(Cshm),
-                            make_shape(Int<kTileM>{}, Int<kTileN>{},Int<1>{}), make_stride(Int<kTileN>{}, Int<1>{}, Int<1>{}));
-    // auto sF = make_tensor(make_smem_ptr(Fshm),
-    //                         make_shape(Int<4>{}, Int<kTileN*20>{}, Int<1>{}), make_stride(Int<kTileN*20>{}, Int<1>{}, Int<1>{}));
-
-    // 根据mma划分tile
-    TiledMMA tiled_mma;
-    // 对shmem划分到线程
-    auto thr_mma = tiled_mma.get_slice(threadIdx.x);
-    auto tCsC = thr_mma.partition_C(sC);  // (MMA, MMA_M, MMA_N)
-    auto tAsA = thr_mma.partition_A(sA);
-    auto tBsB = thr_mma.partition_B(sB);
-    // 对寄存器划分到线程
-    auto tArA = thr_mma.partition_fragment_A(gA(_, _, 0));  // (MMA, MMA_M, MMA_K)
-    auto tBrB = thr_mma.partition_fragment_B(gB(_, _, 0));  // (MMA, MMA_N, MMA_K)
-    auto tCrC = thr_mma.partition_fragment_C(sC(_, _, 0));     // (MMA, MMA_M, MMA_N)
-    // auto tCrD = thr_mma.partition_fragment_C(gD(_, _));     // (MMA, MMA_M, MMA_N)
-    // auto tAsA =  thr_mma.partition_fragment_A(sA(_, _, 0));
-    // auto tBsB =  thr_mma.partition_fragment_A(sB(_, _, 0));
-
-
-
-
-    // thread par
-    Tensor gRow = local_tile(sA, make_shape(Int<1>{}, Int<kTileK>{}, Int<1>{}), make_coord(thread_idx / 4, _, 1));
-    // 4 * 32
-    Tensor gCol = local_tile(sB, make_shape(Int<kTileK*2>{}, Int<kTileK>{}, Int<1>{}), make_coord(thread_idx % 4, _, 1));
-    // 对C进行分块
-    Tensor g_tile = local_tile(sC, make_shape(Int<1>{}, Int<kTileK*2>{}, Int<1>{}), make_coord(thread_idx / 4, thread_idx % 4, 1));
-
-    // global memory
-    Tensor thr_Rec_index = local_tile(gRec, make_shape(Int<1>{},Int<1>{}), make_coord(thread_idx / 4,_));
-    Tensor thr_Lig_index = local_tile(gLig, make_shape(Int<kTileK*2>{},Int<1>{}),make_coord(thread_idx % 4,_));
-
-    // Tensor
-
-
-    auto R_fragment = make_tensor<double>(Shape<_1,_4>{});
-    // auto gCr = make_tensor<double>(Shape<_1,_4>{});
-    auto C_fragment = make_tensor<double>(Shape<_8,_4>{});
-
-    auto til_fragment = make_tensor<double>(Shape<_1,_8>{});
-
-    auto r_ener = make_tensor<double>(Shape<_1,_1>{});
-
-    auto r_index = make_tensor<int>(Shape<_1,_1>{});
-    auto l_index = make_tensor<int>(Shape<_8,_1>{});
-    // gmem -> reg
-    cute::copy(thr_Rec_index, r_index);
-    cute::copy(thr_Lig_index, l_index);
-
-
-    // smem -> reg
-    cute::copy(gRow,R_fragment);
-    cute::copy(gCol,C_fragment);
-    cute::copy(g_tile,til_fragment);
-
-    int rec_num = (block_idx / lig_tile) * kTileM + thread_idx / 4;
-    int lig_num = (block_idx % lig_tile) * kTileN + (thread_idx % 4) * 8;
-
-
-
-#pragma unroll
-    for(int i = 0; i<8;i++){
-        til_fragment(i) = 0;
-        for(int j = 0; j<4; j++){
-            til_fragment(i) +=  R_fragment(j) * C_fragment(i,j);
-        }
-        til_fragment(i) = til_fragment(i) * -2;
-    }
-
-    double sum = 0.0;
-#pragma unroll
-    for(int i = 0; i < 4; i++){
-        sum = sum + R_fragment(i) * R_fragment(i);
-    }
-
-#pragma unroll
-    for(int i = 0; i < 8; i++){
-        if (i+lig_num >= lig_real_len){
-            sum = 0.0;
-        }
-        til_fragment(i) = til_fragment(i) + sum;
-    }
-
-
-// take 4 times
-
-
-// 时钟周期，需要优化 4 8？
-    auto col_sum_fragment = make_tensor<double>(Shape<_1,_8>{});
-
-    col_sum_fragment(0) = (C_fragment(0,0) * C_fragment(0,0) + (C_fragment(0,1) * C_fragment(0,1) + (C_fragment(0,2) * C_fragment(0,2) + (C_fragment(0,3) * C_fragment(0,3)))));
-    col_sum_fragment(1) = (C_fragment(1,0) * C_fragment(1,0) + (C_fragment(1,1) * C_fragment(1,1) + (C_fragment(1,2) * C_fragment(1,2) + (C_fragment(1,3) * C_fragment(1,3)))));
-    col_sum_fragment(2) = (C_fragment(2,0) * C_fragment(2,0) + (C_fragment(2,1) * C_fragment(2,1) + (C_fragment(2,2) * C_fragment(2,2) + (C_fragment(2,3) * C_fragment(2,3)))));
-    col_sum_fragment(3) = (C_fragment(3,0) * C_fragment(3,0) + (C_fragment(3,1) * C_fragment(3,1) + (C_fragment(3,2) * C_fragment(3,2) + (C_fragment(3,3) * C_fragment(3,3)))));
-    col_sum_fragment(4) = (C_fragment(4,0) * C_fragment(4,0) + (C_fragment(4,1) * C_fragment(4,1) + (C_fragment(4,2) * C_fragment(4,2) + (C_fragment(4,3) * C_fragment(4,3)))));
-    col_sum_fragment(5) = (C_fragment(5,0) * C_fragment(5,0) + (C_fragment(5,1) * C_fragment(5,1) + (C_fragment(5,2) * C_fragment(5,2) + (C_fragment(5,3) * C_fragment(5,3)))));
-    col_sum_fragment(6) = (C_fragment(6,0) * C_fragment(6,0) + (C_fragment(6,1) * C_fragment(6,1) + (C_fragment(6,2) * C_fragment(6,2) + (C_fragment(6,3) * C_fragment(6,3)))));
-    col_sum_fragment(7) = (C_fragment(7,0) * C_fragment(7,0) + (C_fragment(7,1) * C_fragment(7,1) + (C_fragment(7,2) * C_fragment(7,2) + (C_fragment(7,3) * C_fragment(7,3)))));
-
-    if(rec_num >= rec_real_len){
-#pragma unroll
-        for(int i = 0; i<8; i++){
-            col_sum_fragment(i) = 0.0;
-        }
-    }
-    axpby(1,col_sum_fragment,1, til_fragment);
-    // __syncthreads();
-
-    int atoma = r_index(0) * 168 * 20;
-
-    uint64_t dist_array[8];
-
-    double thr_energy = 0;
-#pragma unroll
-    for(int i = 0; i<8;i++){
-        // double dist = til_fragment(i);
-        double tmp = 0;
-        if(til_fragment(i) <= 225 && til_fragment(i) > 0){
-            int d = (sqrt(til_fragment(i))*2.0 - 1.0);
-            int dfire_bin = reg_dist_to_bins[d] - 1;
-            int atomb = l_index(i) * 20;
-            unsigned int _array = atoma + atomb + dfire_bin;
-            tmp = d_fastdfire[_array];
-
-        }
-        thr_energy += tmp;
-    }
-    Rshm[thread_idx] = thr_energy;
-    __syncthreads();
-    for(int offset = block_size >> 1; offset >= 32; offset >>=1){
-        if(thread_idx < offset){
-            Rshm[thread_idx] += Rshm[thread_idx+offset];
-        }
-        __syncthreads();
-    }
-    double y = Rshm[thread_idx];
-
-    for(int offset = 16; offset > 0; offset>>=1){
-        y+=__shfl_down_sync(FULL_MASK,y,offset);
-    }
-    if(thread_idx ==0){
-        current_reduce[thread_idx] = y;
-    }
-
-
-    }
-
 }
 
 
@@ -2659,7 +2228,7 @@ calculate_dfire_tensorcore_cute3(
     int * d_moved_base, int * d_step_base,
     double * d_fastdfire,  int * rec_object, int * lig_object, unsigned int * d_dist_to_bins,
     size_t swarms, size_t num_glowworms,
-    size_t receptor_atoms, size_t ligand_atoms, size_t rec_tile, size_t lig_tile, size_t rec_real_len, size_t lig_real_len
+    size_t receptor_atoms, size_t ligand_atoms, size_t rec_tile, size_t lig_tile, size_t rec_real_len, size_t lig_real_len, int step
 ){
     using namespace cute;
     using namespace cub;
@@ -2718,7 +2287,7 @@ calculate_dfire_tensorcore_cute3(
     //      9, 10, 11, 12, 13, 14, 14, 15, 15, 16,
     //     16, 17, 17, 18, 18, 19, 19, 20, 20};
 
-    if((moved || steped == 0)){
+    if((moved || step == 0)){
 
     // global memory tensor
     Tensor A = make_tensor(make_gmem_ptr(current_receptor_pose), make_shape(receptor_atoms, 4), make_stride(4, Int<1>{}));
@@ -3680,6 +3249,14 @@ calculate_dfire_tensorcore_cute_new(
 #pragma unroll
         for(int jj = 0; jj<2; jj++){
 
+            if (ii == 0 && jj == 1) {
+                cp_async_wait<1>();  // 等待 B(1)
+                __syncthreads();
+            } else if (ii == 1 && jj == 0) {
+                cp_async_wait<0>();  // 等待 A(1)
+                __syncthreads();
+            }
+
             // 获得每个tensorcore计算的数据
             Tensor gA = local_tile(bA(_,_,0), make_tile(Int<kTileM>{}, Int<kTileK>{}), make_coord(ii, _));
             Tensor gB = local_tile(bB(_,_,0), make_tile(Int<kTileN>{}, Int<kTileK>{}), make_coord(jj, _));
@@ -4131,17 +3708,21 @@ void cal_gso_tasks_gpu(SwarmCenters & centers,Complex & receptor, Complex &ligna
     constexpr int kTileK = 4;
     dim3 block_tensorcore(gemm_config.block);
     // pad
-    int rec_grid = (receptor.num_atoms + kTileM - 1) / kTileM;
-    int lig_grid = (lignad.num_atoms + kTileN - 1) / kTileN;
-    int rec_len = rec_grid * kTileM;
-    int lig_len = lig_grid * kTileN;
-#if defined(BUILD_4090) || defined(TC_BASE) || defined(RR) || defined(NO_TC)
-    int rec_tile = rec_len/(kTileM);
-    int lig_tile = lig_len/(kTileN);
-#else
-    int rec_tile = rec_len/(kTileM*2);
-    int lig_tile = lig_len/(kTileN*2);
-#endif
+    // The selected kernel processes either 32x32 or 64x64 block tiles.
+    #if defined(BUILD_4090) || defined(GPU_4090) || \
+    defined(TC_BASE) || defined(RR) || defined(NO_TC)
+        constexpr int kBlockTileM = kTileM;
+        constexpr int kBlockTileN = kTileN;
+    #else
+        constexpr int kBlockTileM = kTileM * 2;
+        constexpr int kBlockTileN = kTileN * 2;
+    #endif
+
+    int rec_len =((receptor.num_atoms + kBlockTileM - 1) / kBlockTileM) * kBlockTileM;
+    int lig_len =((lignad.num_atoms + kBlockTileN - 1) / kBlockTileN) * kBlockTileN;
+
+    int rec_tile = rec_len / kBlockTileM;
+    int lig_tile = lig_len / kBlockTileN;
     // initial
     int swarm_len = centers.swarm_chunk;
     int chunks = 1;
@@ -4338,7 +3919,7 @@ void cal_gso_tasks_gpu(SwarmCenters & centers,Complex & receptor, Complex &ligna
         }
     }
     // 构造 random array
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i = 0; i< c_swarm_len; i++){
         for(int s = 0; s<STEPS; s++){
             for(int j = 0; j<num_glowworms; j++ ){
@@ -4435,20 +4016,20 @@ void cal_gso_tasks_gpu(SwarmCenters & centers,Complex & receptor, Complex &ligna
                 rec_len, lig_len, rec_tile, lig_tile, receptor.num_atoms, lignad.num_atoms, step
             );
         #else
-            calculate_dfire_tensorcore_cute_new<decltype(gemm_config),128,8><<<grid_tensorcore, 128>>>(
+        calculate_dfire_tensorcore_cute_new<decltype(gemm_config),128,8><<<grid_tensorcore, 128>>>(
                 d_ener,
                 d_receptor_pose, d_ligand_pose,
                 d_scoring_base, d_luciferin_base, d_rho_base, d_gamma_base,
                 d_moved_base, d_step_base,
                 d_fastdfire, d_dfire_objects_rec, d_dfire_objects_lig,d_dist_to_bins,
                 c_swarm_len, num_glowworms,
-                rec_len, lig_len, rec_tile, lig_tile, receptor.num_atoms, lignad.num_atoms,step
+                rec_len, lig_len, rec_tile, lig_tile, receptor.num_atoms, lignad.num_atoms,0
             );
         #endif
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
 
-        cudaEventElapsedTime(&milliseconds, start, stop);
+        // cudaEventElapsedTime(&milliseconds, start, stop);
         // std::cout << "Kernel execution time: " << milliseconds << " ms" << std::endl;
 
             generate_energy_v2<<<grid_score, num_glowworms>>>(

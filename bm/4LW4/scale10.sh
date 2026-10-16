@@ -21,7 +21,7 @@ dock_home=/home/l6eub2ic/whcs-share31/mengxiangyu/SparkleDock
 rm -rf swarm_*
 rm -rf clustered
 
-mpirun -np 512 -hostfile ${JOB_ID}.nodefile -x PATH -x LD_LIBRARY_PATH -x USE_CUDA -x NUM_THREADS --mca plm_rsh_agent /opt/batch/agent/tools/dstart $dock_home/bin/lightdock -f setup.json -s $STEPS -l 1 
+mpirun -np 512 -hostfile ${JOB_ID}.nodefile -x PATH -x LD_LIBRARY_PATH -x USE_CUDA -x NUM_THREADS --mca plm_rsh_agent /opt/batch/agent/tools/dstart $dock_home/bin/sparkledock -f setup.json -s $STEPS -l 1 
 
 # rm -rf swarm_*
 # rm -rf clustered
