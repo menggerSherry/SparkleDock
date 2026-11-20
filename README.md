@@ -137,13 +137,18 @@ mpirun -np $GPUS $dock_home/bin/lightdock -f setup.json -s $STEPS -l 1
 # Citation
 
 ```
-@misc{meng2026scalablehighfidelitymacromoleculardocking,
-      title={Scalable High-Fidelity Macromolecular Docking for GPU-Accelerated Supercomputers}, 
-      author={Xiangyu Meng and Peng Chen and Mingzhen Li and Jianmin Wang and Sen Wang and Guangming Tan and Weile Jia and Mohamed Wahib and Tao Luo and Xun Wang},
-      year={2026},
-      eprint={2608.07078},
-      archivePrefix={arXiv},
-      primaryClass={cs.DC},
-      url={https://arxiv.org/abs/2608.07078}, 
-}
+@INPROCEEDINGS {,
+author = { Meng, Xiangyu and Chen, Peng and Li, Mingzhen and Wang, Jianmin and Wang, Sen and Tan, Guangming and Jia, Weile and Wahib, Mohamed and Luo, Tao and Wang, Xun },
+booktitle = { SC26: International Conference for High Performance Computing, Networking, Storage and Analysis },
+title = {{ Scalable High-Fidelity Macromolecular Docking for GPU-Accelerated Supercomputers }},
+year = {2026},
+volume = {},
+ISSN = {},
+pages = {1859-1874},
+doi = {10.1109/SC51908.2026.00114},
+url = {https://doi.ieeecomputersociety.org/10.1109/SC51908.2026.00114},
+publisher = {IEEE Computer Society},
+address = {Los Alamitos, CA, USA},
+month =Nov}
+
 ```
